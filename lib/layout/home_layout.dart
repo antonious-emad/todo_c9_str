@@ -1,65 +1,86 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:todo/screens/tasks/add_tasks_bottom_sheet.dart';
-import '../screens/settings/Settings_tab.dart';
-import '../screens/tasks/tasks_tab.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/my_provider.dart';
+import '../screens/register/register.dart';
+import '../screens/settigns_tab/settings_tab.dart';
+import '../screens/tasks_tab/add_task_bottom_sheet.dart';
+import '../screens/tasks_tab/tasks_tab.dart';
+
 class HomeLayout extends StatefulWidget {
-  static const String routeName="Layout";
-  const HomeLayout({super.key});
+  static const String routeName = "HomeLayout";
+
   @override
   State<HomeLayout> createState() => _HomeLayoutState();
 }
+
 class _HomeLayoutState extends State<HomeLayout> {
-  int index=0;
-  List<Widget>tabs=[
-    const TasksTab(),
-    const SettingsTab(),
-  ];
+  int index = 0;
+
   @override
   Widget build(BuildContext context) {
+    var provider=Provider.of<MyProvider>(context);
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
-        toolbarHeight: 90,
-        title: const Text("Todo"),
+        title: Text("Todo ${provider.userModel?.name}"),
+        actions: [
+          IconButton(
+              onPressed: () {
+                FirebaseAuth.instance.signOut();
+                Navigator.pushNamedAndRemoveUntil(
+                    context, RegisterScreen.routeName, (route) => false);
+              },
+              icon: Icon(Icons.logout))
+        ],
       ),
-      body: tabs[index],
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
-          onPressed: (){showSheet();},
-        shape: const CircleBorder(side: BorderSide(
-          color: Colors.white,
-          width: 3
-        ) ),
-          child: const Icon(Icons.add),
+        onPressed: () {
+          showAddTaskBottomSheet();
+        },
+        child: Icon(Icons.add),
       ),
       bottomNavigationBar: BottomAppBar(
-         color: Colors.white,
-        shape: const CircularNotchedRectangle(),
         notchMargin: 8,
+        shape: CircularNotchedRectangle(),
         child: BottomNavigationBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          showUnselectedLabels: false,
-            showSelectedLabels: false,
-            iconSize: 30,
-          onTap: (value){index=value;setState(() {});},
           currentIndex: index,
-          items: const [
-              BottomNavigationBarItem(icon:  Icon(Icons.menu),label: ""),
-              BottomNavigationBarItem(icon:  Icon(Icons.settings),label: ""),
-        ],
+          onTap: (value) {
+            index = value;
+            setState(() {});
+          },
+          items: [
+            BottomNavigationBarItem(icon: Icon(Icons.list), label: ""),
+            BottomNavigationBarItem(icon: Icon(Icons.settings), label: "")
+          ],
         ),
       ),
+      body: tabs[index],
     );
   }
 
-  void showSheet() {
+  List<Widget> tabs = [TasksTab(), SettingsTab()];
+
+  void showAddTaskBottomSheet() {
     showModalBottomSheet(
+      context: context,
       isScrollControlled: true,
-        context: context,
-        builder: (context)=>Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: const AddTaskBottomSheet(),
-        ));
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(12),
+            topRight: Radius.circular(12),
+          )),
+      builder: (context) {
+        return Padding(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: AddTaskBottomSheet(),
+        );
+      },
+    );
   }
 }

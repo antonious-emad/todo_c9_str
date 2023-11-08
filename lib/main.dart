@@ -1,30 +1,44 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:todo/layout/home_layout.dart';
-import 'package:todo/styles/My_theme.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:todo/providers/my_provider.dart';
+import 'package:todo/screens/register/register.dart';
+import 'package:todo/shared/styles/themeing.dart';
+
 import 'firebase_options.dart';
+import 'layout/home_layout.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  // FirebaseFirestore.instance.disableNetwork();
+  runApp(ChangeNotifierProvider(
+      create: (context) => MyProvider(), child: const MyApp()));
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
+    var provider = Provider.of<MyProvider>(context);
+    return MaterialApp(
+      initialRoute: provider.firebaseUser != null ? HomeLayout.routeName : RegisterScreen.routeName,
+      theme: MyThemeData.lightTheme,
+      themeMode: provider.appTheme,
+      darkTheme: MyThemeData.darkTheme,
       debugShowCheckedModeBanner: false,
-      initialRoute:HomeLayout.routeName ,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      locale: Locale(provider.languageCode),
+      supportedLocales: AppLocalizations.supportedLocales,
       routes: {
-        HomeLayout.routeName: (_) => const HomeLayout(),
+        RegisterScreen.routeName: (context) => RegisterScreen(),
+        HomeLayout.routeName: (context) => HomeLayout(),
       },
-      theme: MyTheme.lightTheme,
-      darkTheme: MyTheme.darkTheme,
-      themeMode: ThemeMode.light,
     );
   }
 }
